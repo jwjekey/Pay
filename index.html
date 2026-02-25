@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Pay</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Cormorant+Garamond:wght@300;600&display=swap');
+
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; user-select: none !important; cursor: none !important; }
+
+    body {
+      margin: 0; padding: 0; width: 100vw; height: 100vh;
+      background: #010102; overflow: hidden;
+      font-family: 'Cormorant Garamond', serif;
+      display: flex; justify-content: center; align-items: center;
+      perspective: 1200px;
+    }
+
+    #cursor {
+      position: fixed; width: 12px; height: 12px;
+      background-color: #fff; border-radius: 50%; pointer-events: none; z-index: 10000;
+      mix-blend-mode: difference; left: -100px; top: -100px; transform: translate(-50%, -50%);
+      display: none;
+    }
+
+    .bg-system {
+      position: fixed; inset: -50px; z-index: -1;
+      background: linear-gradient(45deg, #020205, #0a0a25, #1d0b33, #020205);
+      background-size: 400% 400%;
+      animation: cycle 15s ease infinite;
+    }
+    @keyframes cycle { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    .shell {
+      position: relative; width: 92vw; height: 92vw; max-width: 500px; max-height: 500px;
+      background: rgba(15, 15, 25, 0.85);
+      border-radius: 85px;
+      backdrop-filter: blur(60px); -webkit-backdrop-filter: blur(60px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      padding: 30px 40px 45px 40px;
+      transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+      transform-style: preserve-3d;
+    }
+
+    .logo-text {
+      font-family: 'Playfair Display', serif; font-size: 135px; font-weight: 900;
+      font-style: italic; letter-spacing: -6px; margin: 0;
+      background: linear-gradient(180deg, #fff 40%, #888 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 30px 50px rgba(0,0,0,0.9));
+      padding-right: 15px; margin-top: -15px;
+      transform: translateZ(120px);
+      pointer-events: none;
+    }
+
+    .btn-wrapper { width: 100%; transform: translateZ(60px); transform-style: preserve-3d; }
+    .jelly-btn {
+      position: relative; width: 100%; padding: 50px 0; cursor: pointer;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 65px; border: 1.8px solid rgba(255, 255, 255, 0.2);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: transform 0.6s cubic-bezier(0.175, 2.5, 0.32, 1.275);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      transform-style: preserve-3d;
+    }
+    .label { font-size: 15px; font-weight: 600; opacity: 0.4; letter-spacing: 10px; color: #fff; margin-bottom: 8px; transform: translateZ(30px); }
+    .acc { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 900; color: #fff; letter-spacing: -2px; transform: translateZ(50px); }
+
+    .toss-link {
+      margin-bottom: 10px; color: rgba(255,255,255,0.4); text-decoration: none;
+      font-size: 16px; font-weight: 600; letter-spacing: 8px; text-transform: uppercase;
+      transition: all 0.4s; transform: translateZ(40px);
+      cursor: pointer !important;
+    }
+    .toss-link:hover { color: #fff; letter-spacing: 12px; }
+
+    #toast {
+      position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+      background: #fff; color: #000; padding: 20px 80px; border-radius: 100px;
+      font-size: 16px; font-weight: 900; letter-spacing: 7px;
+      transition: all 0.6s cubic-bezier(0.34, 1.8, 0.64, 1); opacity: 0; z-index: 10000;
+    }
+    #toast.active { top: 60px; opacity: 1; }
+
+    @media (max-width: 480px) {
+      .shell { width: 92vw; height: 118vw; border-radius: 80px; padding: 35px 35px 45px 35px; }
+      .logo-text { font-size: 125px; margin-top: 0; }
+      .acc { font-size: 48px; }
+      #cursor { display: none !important; }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false">
+  <div id="cursor"></div>
+  <div class="bg-system"></div>
+  <div id="toast">COPIED</div>
+
+  <div class="shell" id="card">
+    <h1 class="logo-text">Pay</h1>
+    <div class="btn-wrapper">
+      <div class="jelly-btn" id="copyAction">
+        <span class="label">Toss Bank</span>
+        <span class="acc">1001 1668 1040</span>
+      </div>
+    </div>
+    <a href="supertoss://send?amount=0&bank=%ED%86%A0%EC%8A%A4%EB%B1%85%ED%81%AC&accountNo=100116681040&origin=qr" class="toss-link">
+      Toss App →
+    </a>
+  </div>
+
+  <script>
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    var cursor = document.getElementById('cursor');
+    var card = document.getElementById('card');
+    var btn = document.getElementById('copyAction');
+
+    if (!isMobile) {
+      cursor.style.display = 'block';
+      document.addEventListener('mousemove', function(e) {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+        var mx = (e.clientX - window.innerWidth / 2) / 35;
+        var my = (e.clientY - window.innerHeight / 2) / 35;
+        card.style.transform = 'rotateX(' + (-my) + 'deg) rotateY(' + mx + 'deg)';
+      });
+      document.addEventListener('mouseleave', function() {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      });
+    }
+
+    function resetBtn() {
+      btn.style.transition = 'transform 0.6s cubic-bezier(0.175, 2.5, 0.32, 1.275)';
+      btn.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+    }
+
+    btn.addEventListener('mousedown', function(e) {
+      if (isMobile) return;
+      var rect = btn.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+      var px = (y - rect.height / 2) / 2.5;
+      var py = -(x - rect.width / 2) / 5;
+      btn.style.transition = 'transform 0.1s ease-out';
+      btn.style.transform = 'scale(0.9) rotateX(' + px + 'deg) rotateY(' + py + 'deg) translateZ(-10px)';
+    });
+
+    window.addEventListener('mouseup', resetBtn);
+    btn.addEventListener('mouseleave', resetBtn);
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      } else {
+        var t = document.createElement('textarea');
+        t.value = text;
+        t.style.position = 'fixed';
+        t.style.opacity = '0';
+        document.body.appendChild(t);
+        t.focus();
+        t.select();
+        document.execCommand('copy');
+        document.body.removeChild(t);
+        return Promise.resolve();
+      }
+    }
+
+    function showToast() {
+      var toast = document.getElementById('toast');
+      toast.classList.add('active');
+      setTimeout(function() { toast.classList.remove('active'); }, 2000);
+    }
+
+    function trigger(e) {
+      e.preventDefault();
+      if (navigator.vibrate) navigator.vibrate([40, 60]);
+      copyToClipboard('100116681040').then(showToast).catch(showToast);
+    }
+
+    btn.addEventListener('click', function(e) { if (!isMobile) trigger(e); });
+    btn.addEventListener('touchstart', function(e) {
+      btn.style.transform = 'scale(0.85) translateY(12px) translateZ(-40px)';
+      trigger(e);
+    }, { passive: false });
+    btn.addEventListener('touchend', resetBtn);
+  </script>
+</body>
+</html>
